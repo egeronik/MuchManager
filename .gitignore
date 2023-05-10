@@ -1,0 +1,12 @@
+/config.py
+/env
+/__pycache__
+/source
+/docs
+/_build/doctrees/
+/make.bat
+/Makefile
+/_templates
+/_static
+/conf.py
+/index.rst
