@@ -1,6 +1,8 @@
 import socket
 import json
+from flask import Flask, request
 
+VK_PORT = 65432
 HOST = "127.0.0.1"  # IP машины с парсерами, у нас лупбек
 
 # Кастомная функция чтения даты из сокета
@@ -42,7 +44,44 @@ def requestAction(payload: dict, port: int) -> dict:
         res = json.loads(data)
     return res
 
+api = Flask(__name__)
 
+# Для каждого парсера пишем одну функцию, все запросы идут через метод GET
+@api.route('/VK/<method>', methods=['GET'])
+def get_vk(method):
+    """Функция отвечающая за направление запросов на VK парсер
+
+    Args:
+        method (str): Вызываемый метод. subs|posts
+
+    Returns:
+        _type_: Текст ответа
+    """
+    # Перечисляем список разрешенных методов
+    allowed_methods = {"subs","posts","group"}
+    
+    if not method in allowed_methods:
+        return "Bad method"
+    
+    payload = dict(request.args)
+    payload["method"]=method
+    
+    try:
+        # Кидаем запрос на парсер
+        return requestAction(payload, VK_PORT)
+    # Если парсер не пашет ловим ошибку
+    except ConnectionRefusedError:
+        return  {"type": "error", "data":{"error":"Parser not started"}}
+
+    
+
+
+@api.route('/')
+def hello():
+    return 'А что это мы тут смотрим???'
+
+
+api.run()
 
 # # Примеры
 # payload = {"method": "subs", "data": 67580761}
