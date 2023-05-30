@@ -3,6 +3,7 @@ import json
 from flask import Flask, request
 
 VK_PORT = 65432
+YouTube_PORT = 65433
 HOST = "127.0.0.1"  # IP машины с парсерами, у нас лупбек
 
 # Кастомная функция чтения даты из сокета
@@ -74,6 +75,29 @@ def get_vk(method):
         return  {"type": "error", "data":{"error":"Parser not started"}}
 
     
+@api.route('/YouTube/<method>', methods=['GET'])
+def get_yt(method):
+    """Функция отвечающая за направление запросов на YiuTube парсер
+    Args:
+        method (str): Вызываемый метод. channel|subs|videos
+    Returns:
+        _type_: Текст ответа
+    """
+    # Перечисляем список разрешенных методов
+    allowed_methods = {"channel", "subs", "videos"}
+
+    if not method in allowed_methods:
+        return "Bad method"
+
+    payload = dict(request.args)
+    payload["method"] = method
+
+    try:
+        # Кидаем запрос на парсер
+        return requestAction(payload, YouTube_PORT)
+    # Если парсер не пашет ловим ошибку
+    except ConnectionRefusedError:
+        return {"type": "error", "data": {"error": "Parser not started"}}
 
 
 @api.route('/')
@@ -89,3 +113,6 @@ api.run()
 
 # payload2 = {"method": "posts", "data": {"channel_id": 67580761, "count": 2}}
 # print(requestAction(payload2, 65432))
+
+# payload3 = {"method": "videos", "data": {"channel_id": "UCfcc8OORrouV1lO_qeIZVNQ", "count": 3}}
+# print(requestAction(payload3, 65433))
